@@ -20,10 +20,11 @@ export class ProductService {
 
     async findAll(skip = 0, limit = 10) {
 
-        const [data, total] = await this.productRepo.findAndCount({
-            skip: skip,
-            take: limit,
-        });
+        const [data, total] =
+            await this.productRepo.findAndCount({
+                skip,
+                take: limit,
+            });
 
         return {
             data,

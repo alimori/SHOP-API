@@ -1,7 +1,8 @@
 import { Controller, Get, Post, Body, Put, Delete, Param, ParseIntPipe, Res, Query } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { PaginationQueryDto } from './dto/pagination-query.dto';
 
 @ApiTags('Products')
 @Controller('products')
@@ -18,17 +19,28 @@ export class ProductController {
         return this.productService.create(dto);
     }
 
-    // @Get()
-    // @ApiOperation({ summary: 'Get all products' })
-    // findAll(@Query() paginationQuery, @Res() response,) {
-    //     const { limit, offset } = paginationQuery;
-    //     return this.productService.findAll();
-    // }
     @Get()
-    @ApiOperation({ summary: 'Get all products' })
-    findAll(@Query() paginationQuery) {
-        const { skip, limit } = paginationQuery;
-        return this.productService.findAll(+skip, +limit);
+    @ApiOperation({
+        summary: 'Get products with pagination',
+    })
+    @ApiQuery({
+        name: 'skip',
+        required: false,
+        example: 0,
+    })
+    @ApiQuery({
+        name: 'limit',
+        required: false,
+        example: 10,
+    })
+    findAll(
+        @Query() query: PaginationQueryDto,
+    ) {
+
+        return this.productService.findAll(
+            query.skip,
+            query.limit,
+        );
     }
 
     @Put(':id')
