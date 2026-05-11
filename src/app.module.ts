@@ -14,6 +14,7 @@ import { OrderModule } from './order/order.module';
       database: 'shop',
 
       autoLoadEntities: true,
+      // synchronize: true in DEVELOPMENT, synchronize: false in PRODUCTION
       synchronize: true,
     }),
     ProductModule,

@@ -35,13 +35,14 @@ export class ProductService {
     }
 
     async update(id: number, dto: CreateProductDto) {
-        const product = await this.productRepo.findOne({ where: { id } });
+        const product = await this.productRepo.preload({ 
+            id: +id,
+            ...dto
+        });
 
         if (!product) {
             throw new NotFoundException('Product not found');
         }
-
-        Object.assign(product, dto);
 
         return this.productRepo.save(product);
     }

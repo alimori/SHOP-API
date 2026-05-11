@@ -1,31 +1,3 @@
-// import { Injectable } from '@nestjs/common';
-// import { CreateOrderDto } from './dto/create-order.dto';
-// import { UpdateOrderDto } from './dto/update-order.dto';
-
-// @Injectable()
-// export class OrderService {
-//   create(createOrderDto: CreateOrderDto) {
-//     return 'This action adds a new order';
-//   }
-
-//   findAll() {
-//     return `This action returns all order`;
-//   }
-
-//   findOne(id: number) {
-//     return `This action returns a #${id} order`;
-//   }
-
-//   update(id: number, updateOrderDto: UpdateOrderDto) {
-//     return `This action updates a #${id} order`;
-//   }
-
-//   remove(id: number) {
-//     return `This action removes a #${id} order`;
-//   }
-// }
-
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -33,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
 import { Product } from '../product/entities/product.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Injectable()
 export class OrderService {
@@ -67,27 +40,34 @@ export class OrderService {
     return this.orderRepo.save(order);
   }
 
-
-  async update(id: number, dto: CreateOrderDto) {
-    const order = await this.orderRepo.findOne({
-      where: { id },
-      relations: ['product'],
-    });
-
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
+  async update(
+    id: number,
+    dto: UpdateOrderDto,
+  ) {
 
     const product = await this.productRepo.findOne({
-      where: { id: dto.productId },
+      where: {
+        id: dto.productId,
+      },
     });
 
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException(
+        'Product not found',
+      );
     }
 
-    order.quantity = dto.quantity;
-    order.product = product;
+    const order = await this.orderRepo.preload({
+      id,
+      quantity: dto.quantity,
+      product,
+    });
+
+    if (!order) {
+      throw new NotFoundException(
+        'Order not found',
+      );
+    }
 
     return this.orderRepo.save(order);
   }
