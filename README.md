@@ -1,4 +1,4 @@
-# NestJd - Shop API
+# NestJs - Shop API
 
 Simple backend project built with:
 
