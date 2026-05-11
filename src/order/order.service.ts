@@ -108,4 +108,17 @@ export class OrderService {
     });
   }
 
+  async findByProduct(productId: number) {
+
+    return this.orderRepo.find({
+      where: {
+        product: {
+          id: productId,
+        },
+      },
+
+      relations: ['product'],
+    });
+  }
+
 }

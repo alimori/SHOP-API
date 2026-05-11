@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Delete, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Delete, Param, ParseIntPipe, Res, Query } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -18,10 +18,17 @@ export class ProductController {
         return this.productService.create(dto);
     }
 
+    // @Get()
+    // @ApiOperation({ summary: 'Get all products' })
+    // findAll(@Query() paginationQuery, @Res() response,) {
+    //     const { limit, offset } = paginationQuery;
+    //     return this.productService.findAll();
+    // }
     @Get()
     @ApiOperation({ summary: 'Get all products' })
-    findAll() {
-        return this.productService.findAll();
+    findAll(@Query() paginationQuery) {
+        const { skip, limit } = paginationQuery;
+        return this.productService.findAll(+skip, +limit);
     }
 
     @Put(':id')

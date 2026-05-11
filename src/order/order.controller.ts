@@ -76,4 +76,13 @@ export class OrderController {
     return this.orderService.remove(id);
   }
 
+  @Get('product/:productId')
+  @ApiOperation({ summary: 'Find by product' })
+  findByProduct(
+    @Param('productId', ParseIntPipe) productId: number,
+  ) {
+    return this.orderService.findByProduct(productId);
+  }
+
+
 }

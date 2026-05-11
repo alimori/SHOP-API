@@ -18,8 +18,19 @@ export class ProductService {
         return this.productRepo.save(product);
     }
 
-    findAll() {
-        return this.productRepo.find();
+    async findAll(skip = 0, limit = 10) {
+
+        const [data, total] = await this.productRepo.findAndCount({
+            skip: skip,
+            take: limit,
+        });
+
+        return {
+            data,
+            total,
+            skip,
+            limit,
+        };
     }
 
     async update(id: number, dto: CreateProductDto) {
