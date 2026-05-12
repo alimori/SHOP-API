@@ -1,5 +1,9 @@
 # NestJs - Shop API
 
+After read this tutorial see this:
+
+## [NestJs + Real World + Enterprice + Production Architecture](./ARCHITECTURE.md)
+
 Simple backend project built with:
 
 - NestJS
@@ -63,9 +67,6 @@ src/
 
 ---
 
-## [See NestJs + Real World + Enterprice + Production Architecture](./ARCHITECTURE.md)
-
----
 
 # Installation
 
