@@ -43,6 +43,14 @@ export class ProductController {
         );
     }
 
+    @Get(':id')
+    @ApiOperation({ summary: 'Get product by Id' })
+    findOne(
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+        return this.productService.findOne(id);
+    }
+
     @Put(':id')
     @ApiOperation({ summary: 'Update product' })
     update(
