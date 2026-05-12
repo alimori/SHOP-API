@@ -11,8 +11,9 @@ Simple backend project built with:
 This project demonstrates:
 
 - Product CRUD
+- Categoury CRUD
 - Order CRUD
-- Entity relations
+- Entity relations (one to many, many to many)
 - Swagger documentation
 - PostgreSQL integration
 - Docker database setup
@@ -41,6 +42,13 @@ src/
 │   ├── product.controller.ts
 │   ├── product.service.ts
 │   └── product.module.ts
+│
+├── category/
+│   ├── dto/
+│   ├── entities/
+│   ├── category.controller.ts
+│   ├── category.service.ts
+│   └── category.module.ts
 │
 ├── order/
 │   ├── dto/
@@ -186,6 +194,38 @@ export class Product {
 
   @OneToMany(() => Order, (order) => order.product)
   orders: Order[];
+
+  @ManyToMany(
+    () => Category,
+    (category) => category.products,
+    {
+      cascade: true,
+    },
+  )
+  @JoinTable()
+  categories: Category[];
+}
+```
+
+---
+
+## Category Entity
+
+```ts
+@Entity()
+export class Category {
+
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  title: string;
+
+  @ManyToMany(
+    () => Product,
+    (product) => product.categories,
+  )
+  products: Product[];
 }
 ```
 
@@ -213,9 +253,11 @@ export class Order {
 # Database Relation
 
 ```text
+Product ∞ ────────∞ Category
 Product 1 ────────∞ Order
 ```
 
+One category can have many products, and each product can belong to many categories.
 One product can have many orders.
 
 ---
@@ -228,8 +270,22 @@ One product can have many orders.
 |---|---|---|
 | POST | /products | Create product |
 | GET | /products | Get all products |
+| GET | /products/:id | Get product by Id |
 | PUT | /products/:id | Update product |
 | DELETE | /products/:id | Delete product |
+
+---
+
+# Category APIs
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | /categories | Create category |
+| GET | /categories | Get all categories |
+| GET | /categories/:id | Get category by Id |
+| PUT | /categories/:id | Update category |
+| DELETE | /categories/:id | Delete categoriy |
+| GET | /categories/:id/:products | Get category by Id with products |
 
 ---
 
@@ -241,6 +297,7 @@ One product can have many orders.
 | GET | /orders | Get all orders |
 | PUT | /orders/:id | Update order |
 | DELETE | /orders/:id | Delete order |
+| GET | /orders/product/:productId | Get orders by product Id |
 
 ---
 
@@ -253,7 +310,20 @@ POST `/products`
 ```json
 {
   "title": "Laptop",
-  "price": 1200
+  "price": 1200,
+  "categoryIds": [1,2]
+}
+```
+
+---
+
+## Create Category
+
+POST `/categories`
+
+```json
+{
+  "title": "Electronics"
 }
 ```
 
@@ -319,15 +389,29 @@ docker logs nest-postgres
 
 ---
 
+# Supported Features
+
+- OneToMany
+- ManyToMany
+- CRUD
+- Pagination
+- DTO Validation
+- Swagger
+- Exception handling
+- PostgreSQL
+- Docker
+
+---
+
 # Future Improvements
 
-- DTO validation
 - JWT Authentication
-- Pagination
-- Filtering
+- Roles & Guards
+- ConfigModule + .env
 - Migrations
 - Unit testing
-- Clean architecture
+- WebSockets
+- Event-driven architecture
 - Microservices
 
 ---
