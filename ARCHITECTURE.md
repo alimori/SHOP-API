@@ -192,7 +192,6 @@ Order created
 Event fired
    ↓
 Payment service listens
-   ↓
 Notification service listens
 ```
 
@@ -281,3 +280,430 @@ Domain → Rules of Universe
 | large project  | layered (DDD style)    |
 | enterprise     | microservices + events |
 
+
+## 13. Evolution of Backend Architecture
+
+Most developers evolve like this:
+```
+Simple CRUD app
+```
+↓
+```
+Modular monolith
+```
+↓
+```
+Clean Architecture
+```
+↓
+```
+Event-driven architecture
+```
+↓
+```
+Microservices
+```
+
+## 14. What is Clean Architecture?
+
+Clean Architecture separates:
+```
+Business logic
+from
+Framework/Database/HTTP
+```
+
+Meaning:
+```
+Your business should NOT depend on NestJS
+```
+
+---
+
+### Clean Architecture Layers
+
+```
+Presentation Layer
+   ↓
+Application Layer
+   ↓
+Domain Layer
+   ↓
+Infrastructure Layer
+```
+
+---
+
+### Example (Shop)
+### Presentation Layer
+
+HTTP Controllers
+```
+POST /orders
+```
+
+---
+
+### Application Layer
+
+Use cases:
+```
+CreateOrderUseCase
+```
+
+---
+
+### Domain Layer
+
+Pure business rules:
+```
+Order
+Product
+Price calculation
+Discount rules
+```
+
+---
+
+### Infrastructure Layer
+
+Technical implementations:
+```
+TypeORM
+PostgreSQL
+Redis
+RabbitMQ
+Kafka
+```
+
+---
+
+### Real Folder Structure
+
+```
+src/
+ ├── modules/
+ │
+ │   ├── order/
+ │   │    ├── domain/
+ │   │    ├── application/
+ │   │    ├── infrastructure/
+ │   │    ├── presentation/
+ │
+ │   ├── product/
+ │
+ ├── shared/
+ ├── config/
+```
+
+## 15. What are Microservices?
+
+Instead of:
+```
+ONE BIG APP
+```
+
+You split system into:
+```
+Small independent services
+```
+
+---
+
+### Example
+
+Instead of:
+```
+shop-api
+```
+You create:
+```
+product-service
+order-service
+payment-service
+notification-service
+user-service
+```
+Each has:
+```
+own DB
+own deployment
+own logic
+```
+
+### Real Uber-style Architecture
+```
+API Gateway
+    ↓
+-------------------
+| User Service    |
+| Order Service   |
+| Payment Service |
+| Driver Service  |
+-------------------
+```
+
+## 16. Why Microservices?
+
+### Benefits
+
+- ✅ independent deployment
+- ✅ scaling services independently
+- ✅ team separation
+- ✅ fault isolation
+- ✅ technology flexibility
+
+### Problems
+
+- ❌ complexity
+- ❌ distributed systems
+- ❌ network failures
+- ❌ eventual consistency
+- ❌ monitoring difficulty
+
+---
+
+### IMPORTANT
+
+Microservices are NOT automatically better.
+
+Small projects should NOT use them.
+
+## 16. Event-Driven Architecture
+
+This is where systems become REALLY scalable.
+
+### Traditional Request Flow
+```
+Order Service
+   ↓
+calls Payment Service
+   ↓
+waits
+```
+
+This is synchronous.
+
+---
+
+### Event-driven Flow
+```
+Order Created
+    ↓
+Event Bus
+    ↓
+Payment listens
+Notification listens
+Analytics listens
+```
+
+Services don’t directly call each other.
+
+---
+
+### Example Event Flow
+### User creates order
+```
+POST /orders
+```
+↓
+
+```
+OrderCreatedEvent
+```
+↓
+
+Consumers react:
+```
+Payment Service
+Notification Service
+Inventory Service
+Analytics Service
+```
+
+---
+
+### Why Events are Powerful
+
+Services become:
+```
+loosely coupled
+```
+
+instead of:
+```
+tightly coupled
+```
+
+## 17. NestJS Event Example (Simple)
+Install
+```
+npm install @nestjs/event-emitter
+```
+
+---
+
+### app.module.ts
+```
+EventEmitterModule.forRoot()
+```
+
+---
+
+### Emit Event
+```
+this.eventEmitter.emit(
+  'order.created',
+  {
+    orderId: 1,
+    productId: 2,
+  },
+);
+```
+
+---
+
+### Listen to Event
+```
+@OnEvent('order.created')
+handleOrderCreated(payload: any) {
+  console.log(payload);
+}
+```
+
+---
+
+### Real Production Event Systems
+
+Simple event emitter only works INSIDE app.
+
+Production systems use:
+
+| Broker        | Purpose           |
+| ------------- | ----------------- |
+| RabbitMQ      | queues/events     |
+| Apache Kafka  | huge-scale events |
+| Redis Pub/Sub | lightweight       |
+| Amazon SQS    | cloud queues      |
+
+## 18. Real Production Example
+### Order Service
+```
+creates order
+```
+↓
+
+Publishes:
+```
+order.created
+```
+↓
+
+---
+
+### Payment Service
+```
+listens to event
+```
+↓
+
+charges user
+
+↓
+
+publishes:
+```
+payment.completed
+```
+↓
+
+---
+
+### Notification Service
+```
+sends SMS/email
+```
+
+## 19. Eventual Consistency
+
+Microservices avoid giant transactions.
+
+Instead:
+```
+system becomes eventually consistent
+```
+Meaning:
+```
+order created
+payment processed later
+notification sent later
+```
+
+## 20. Real Production Architecture
+```
+Client
+  ↓
+API Gateway
+  ↓
+------------------------
+| Product Service      |
+| Order Service        |
+| Payment Service      |
+| Notification Service |
+------------------------
+  ↓
+RabbitMQ / Kafka
+```
+
+## 21. Biggest Microservice Problems
+### ❌ Distributed Transactions
+```
+service A succeeds
+service B fails
+```
+Hard problem.
+
+---
+
+### ❌ Debugging
+
+Request travels through many services.
+
+---
+
+### ❌ Monitoring
+
+Need:
+```
+logs
+tracing
+metrics
+```
+
+---
+
+### ❌ Deployment Complexity
+
+Many Docker containers.
+
+## 22. What Companies ACTUALLY Do
+
+Most companies use:
+```
+Modular Monolith FIRST
+```
+Then split only critical services.
+
+---
+
+### Example
+
+Start:
+```
+shop-api
+```
+Later split:
+```
+payment-service
+notification-service
+```
