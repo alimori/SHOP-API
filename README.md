@@ -462,6 +462,26 @@ Service
 Repository
 ```
 
+## Production Backend Architecture
+
+Real systems are NOT like:
+
+```
+controller → service → repository → database
+```
+
+They are layered + bounded + event-driven:
+
+```
+API Layer (Controllers)
+   ↓
+Application Layer (Use Cases)
+   ↓
+Domain Layer (Business Rules)
+   ↓
+Infrastructure Layer (DB / External Services)
+```
+
 ## Better folder structure
 
 ```

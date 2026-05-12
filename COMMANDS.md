@@ -50,3 +50,9 @@ Commands:
       │ sub-app       │ app         │ Generate a new application within a monorepo │
       └───────────────┴─────────────┴──────────────────────────────────────────────┘
 ```
+
+# Migration
+
+```
+npx typeorm migration:create -n AddCategoryToProduct
+```
