@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,16 +17,20 @@ async function bootstrap() {
     }),
   );
 
-  const swaggerConfig  = new DocumentBuilder()
+  app.useGlobalFilters(
+    new HttpExceptionFilter(),
+  );
+
+  const swaggerConfig = new DocumentBuilder()
     .setTitle('Shop API')
     .setDescription('Product & Order API')
     .setVersion('1.0')
     .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig );
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, document);
 
 
-   const configService = app.get(ConfigService);
+  const configService = app.get(ConfigService);
 
   const port = configService.get<number>('port') ?? 3000;
 
