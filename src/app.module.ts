@@ -4,6 +4,7 @@ import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
 import { CategoryModule } from './category/category.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CommonModule } from './common/common.module';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 
@@ -18,18 +19,6 @@ import databaseConfig from './config/database.config';
       ],
     }),
 
-    // TypeOrmModule.forRoot({
-    //   type: 'postgres',
-    //   host: '127.0.0.1',
-    //   port: 5432,
-    //   username: 'postgres',
-    //   password: '1234',
-    //   database: 'shop',
-
-    //   autoLoadEntities: true,
-    //   // synchronize: true in DEVELOPMENT, synchronize: false in PRODUCTION
-    //   synchronize: true,
-    // }),
 
     TypeOrmModule.forRootAsync({
 
@@ -54,6 +43,7 @@ import databaseConfig from './config/database.config';
     ProductModule,
     OrderModule,
     CategoryModule,
+    CommonModule,
   ],
 })
 export class AppModule { }

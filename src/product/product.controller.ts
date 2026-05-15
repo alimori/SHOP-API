@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Put, Delete, Param, ParseIntPipe, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Delete, Param, ParseIntPipe, Res, Query, SetMetadata } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('Products')
 @Controller('products')
@@ -13,6 +14,7 @@ export class ProductController {
     ) { }
 
     @Post()
+    @Public()
     @ApiOperation({ summary: 'Create product' })
     @ApiResponse({ status: 201, description: 'Product created' })
     create(@Body() dto: CreateProductDto) {
@@ -20,6 +22,7 @@ export class ProductController {
     }
 
     @Get()
+    @Public()
     @ApiOperation({
         summary: 'Get products with pagination',
     })
@@ -44,6 +47,7 @@ export class ProductController {
     }
 
     @Get(':id')
+    @Public()
     @ApiOperation({ summary: 'Get product by Id' })
     findOne(
         @Param('id', ParseIntPipe) id: number,
@@ -52,6 +56,7 @@ export class ProductController {
     }
 
     @Put(':id')
+    @Public()
     @ApiOperation({ summary: 'Update product' })
     update(
         @Param('id', ParseIntPipe) id: number,
@@ -61,6 +66,7 @@ export class ProductController {
     }
 
     @Delete(':id')
+    @Public()
     @ApiOperation({ summary: 'Delete product' })
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.productService.remove(id);

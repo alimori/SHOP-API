@@ -4,8 +4,10 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('Orders') // 👈 group in Swagger UI
+@Public()
 @Controller('orders')
 export class OrderController {
 
