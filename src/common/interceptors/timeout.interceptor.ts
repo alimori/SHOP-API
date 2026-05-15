@@ -6,6 +6,8 @@ import {
   RequestTimeoutException,
 } from '@nestjs/common';
 
+import { ConfigService } from '@nestjs/config';
+
 import { Observable, throwError } from 'rxjs';
 
 import {
@@ -18,14 +20,26 @@ export class TimeoutInterceptor
   implements NestInterceptor
 {
 
+  constructor(
+    private readonly configService: ConfigService,
+  ) {}
+
   intercept(
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<any> {
 
+    const timeoutMs = Number(
+
+      this.configService.get<string>(
+        'REQUEST_TIMEOUT',
+        '10000',
+      ),
+    );
+
     return next.handle().pipe(
 
-      timeout(5000),
+      timeout(timeoutMs),
 
       catchError((error) => {
 
@@ -34,7 +48,7 @@ export class TimeoutInterceptor
           return throwError(() =>
 
             new RequestTimeoutException(
-              'Request timeout',
+              `Request timeout after ${timeoutMs}ms`,
             ),
           );
         }

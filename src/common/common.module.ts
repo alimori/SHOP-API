@@ -11,36 +11,37 @@ import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
 
 @Global()
 @Module({
-  imports: [
-    ConfigModule,
-  ],
+    imports: [
+        ConfigModule,
+    ],
 
-  providers: [
+    providers: [
 
-    // Global API Key Guard
-    {
-      provide: APP_GUARD,
-      useClass: ApiKeyGuard,
-    },
+        // Global API Key Guard
+        {
+            provide: APP_GUARD,
+            useClass: ApiKeyGuard,
+        },
 
-    // Global Exception Filter
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
+        // Global Exception Filter
+        {
+            provide: APP_FILTER,
+            useClass: HttpExceptionFilter,
+        },
 
-    // Global Interceptor
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: WrapResponseInterceptor,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TimeoutInterceptor,
-    },
-    
-  ],
+        // Global Interceptor
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: TimeoutInterceptor,
+        },
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: WrapResponseInterceptor,
+        },
 
-  exports: [],
+
+    ],
+
+    exports: [],
 })
-export class CommonModule {}
+export class CommonModule { }
