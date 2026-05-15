@@ -20,6 +20,7 @@ import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Public } from 'src/common/decorators/public.decorator';
+import { ApiOkWrappedResponse } from 'src/common/dto/api-ok-response.decorator';
 
 @ApiTags('Categories')
 @Public()
@@ -45,6 +46,7 @@ export class CategoryController {
   }
 
   @Get()
+  @ApiOkWrappedResponse(CreateCategoryDto)
   @ApiOperation({
     summary: 'Get all categories',
   })
@@ -53,7 +55,7 @@ export class CategoryController {
   }
 
   @Get(':id')
-   @ApiOperation({
+  @ApiOperation({
     summary: 'Get Category by id',
   })
   findOne(@Param('id') id: string) {
@@ -61,7 +63,7 @@ export class CategoryController {
   }
 
   @Get(':id/products')
-   @ApiOperation({
+  @ApiOperation({
     summary: 'Get category with products by id',
   })
   findOnewithProducts(@Param('id') id: string) {

@@ -4,6 +4,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
 import { Public } from 'src/common/decorators/public.decorator';
+import { ApiOkWrappedResponse } from 'src/common/dto/api-ok-response.decorator';
 
 @ApiTags('Products')
 @Controller('products')
@@ -23,6 +24,7 @@ export class ProductController {
 
     @Get()
     @Public()
+    @ApiOkWrappedResponse(CreateProductDto)
     @ApiOperation({
         summary: 'Get products with pagination',
     })

@@ -43,7 +43,7 @@ export class ProductService {
             });
 
         return {
-            data,
+            items: data,
             total,
             skip,
             limit,
