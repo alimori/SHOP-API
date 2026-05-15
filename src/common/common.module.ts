@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ApiKeyGuard } from './guards/api-key/api-key.guard';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { WrapResponseInterceptor } from './interceptors/wrap-response.interceptor';
+import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
 
 @Global()
 @Module({
@@ -33,6 +34,11 @@ import { WrapResponseInterceptor } from './interceptors/wrap-response.intercepto
       provide: APP_INTERCEPTOR,
       useClass: WrapResponseInterceptor,
     },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TimeoutInterceptor,
+    },
+    
   ],
 
   exports: [],
