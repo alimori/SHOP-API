@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
@@ -8,6 +8,7 @@ import { ApiKeyGuard } from './guards/api-key/api-key.guard';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { WrapResponseInterceptor } from './interceptors/wrap-response.interceptor';
 import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
+import { RequestLoggerMiddleware } from './middleware/request-logger.middleware';
 
 @Global()
 @Module({
@@ -40,8 +41,16 @@ import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
         },
 
 
+
     ],
 
     exports: [],
 })
-export class CommonModule { }
+export class CommonModule implements NestModule {
+    configure(consumer: MiddlewareConsumer,) {
+        consumer.apply(RequestLoggerMiddleware).forRoutes('*');
+        // consumer.apply(RequestLoggerMiddleware).exclude('products','categories').forRoutes('*');
+        // consumer.apply(RequestLoggerMiddleware).forRoutes('products');
+        // consumer.apply(RequestLoggerMiddleware).forRoutes({ path: 'products', method: RequestMethod.GET });
+    }
+}
