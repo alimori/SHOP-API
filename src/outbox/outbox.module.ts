@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { OutboxEvent } from './entities/outbox-event.entity';
 import { OutboxProcessor } from './outbox.processor';
+import { RabbitMQModule } from 'src/rabbitmq/rabbitmq.module';
 
 @Module({
     imports: [
@@ -11,6 +12,8 @@ import { OutboxProcessor } from './outbox.processor';
         TypeOrmModule.forFeature([
             OutboxEvent,
         ]),
+
+        RabbitMQModule 
     ],
 
     providers: [

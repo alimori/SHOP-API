@@ -12,6 +12,7 @@ import { OutboxModule } from './outbox/outbox.module';
 import { LoggingModule } from './logging/logging.module';
 import { EmailModule } from './email/email.module';
 import { MongooseModule } from '@nestjs/mongoose';
+import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
@@ -45,9 +46,29 @@ import { MongooseModule } from '@nestjs/mongoose';
       }),
     }),
 
+    // MongoDb
     MongooseModule.forRoot(
       'mongodb://localhost:27017/shop-logs',
     ),
+
+    //RabbitMQ
+    // ClientsModule.register([
+    //   {
+    //     name: 'RABBITMQ_SERVICE',
+    //     transport: Transport.RMQ,
+    //     options: {
+    //       urls: [
+    //         'amqp://guest:guest@localhost:5672',
+    //       ],
+    //       queue: 'product_events',
+    //       queueOptions: {
+    //         durable: true,
+    //       },
+    //     },
+    //   },
+    // ]),
+RabbitMQModule,
+
     ProductModule,
     OrderModule,
     CategoryModule,
