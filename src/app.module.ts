@@ -7,6 +7,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CommonModule } from './common/common.module';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { OutboxModule } from './outbox/outbox.module';
+import { LoggingModule } from './logging/logging.module';
+import { EmailModule } from './email/email.module';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
@@ -40,10 +45,17 @@ import databaseConfig from './config/database.config';
       }),
     }),
 
+    MongooseModule.forRoot(
+      'mongodb://localhost:27017/shop-logs',
+    ),
     ProductModule,
     OrderModule,
     CategoryModule,
     CommonModule,
+    EventEmitterModule.forRoot(),
+    OutboxModule,
+    LoggingModule,
+    EmailModule,
   ],
 })
 export class AppModule { }

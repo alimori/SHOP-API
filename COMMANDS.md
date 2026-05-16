@@ -62,6 +62,8 @@ npx typeorm migration:create -n AddCategoryToProduct
 For unit test
 ```
 npm run test
+npm run test -- product.controller
+npm run test -- product.service
 ```
 
 For test coverage
@@ -72,4 +74,5 @@ npm run test:cov
 For e2e test
 ```
 npm run test:e2e
+npm run test:e2e -- product
 ```
