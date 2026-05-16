@@ -56,3 +56,20 @@ Commands:
 ```
 npx typeorm migration:create -n AddCategoryToProduct
 ```
+
+# Test
+
+For unit test
+```
+npm run test
+```
+
+For test coverage
+```
+npm run test:cov
+```
+
+For e2e test
+```
+npm run test:e2e
+```
