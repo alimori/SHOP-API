@@ -13,6 +13,7 @@ import { LoggingModule } from './logging/logging.module';
 import { EmailModule } from './email/email.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -51,24 +52,8 @@ import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
       'mongodb://localhost:27017/shop-logs',
     ),
 
-    //RabbitMQ
-    // ClientsModule.register([
-    //   {
-    //     name: 'RABBITMQ_SERVICE',
-    //     transport: Transport.RMQ,
-    //     options: {
-    //       urls: [
-    //         'amqp://guest:guest@localhost:5672',
-    //       ],
-    //       queue: 'product_events',
-    //       queueOptions: {
-    //         durable: true,
-    //       },
-    //     },
-    //   },
-    // ]),
-RabbitMQModule,
-
+    RabbitMQModule,
+    UploadModule,
     ProductModule,
     OrderModule,
     CategoryModule,
