@@ -104,24 +104,6 @@ export class ProductService {
         return product;
     }
 
-    // async update(id: number, dto: CreateProductDto) {
-    //     const product = await this.productRepo.preload({
-    //         id: +id,
-    //         ...dto
-    //     });
-
-    //     if (!product) {
-    //         throw new NotFoundException('Product not found');
-    //     }
-
-    //     const categories =
-    //         await this.categoryRepo.findBy({
-    //             id: In(dto.categoryIds),
-    //         });
-    //     product.categories = [...categories];
-
-    //     return this.productRepo.save(product);
-    // }
 
     async update(id: number, dto: CreateProductDto) {
 
@@ -193,16 +175,6 @@ export class ProductService {
             await queryRunner.release();
         }
     }
-
-    // async remove(id: number) {
-    //     const product = await this.productRepo.findOne({ where: { id } });
-
-    //     if (!product) {
-    //         throw new NotFoundException('Product not found');
-    //     }
-
-    //     return this.productRepo.remove(product);
-    // }
 
     async remove(id: number) {
         const queryRunner = this.dataSource.createQueryRunner();

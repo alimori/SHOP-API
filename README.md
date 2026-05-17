@@ -1,517 +1,384 @@
-# NestJs - Shop API
+# Shop Microservices Architecture
 
-After read this tutorial see this:
+Author: [Ali Mortazavi](https://www.linkedin.com/in/ali-mortazavi-a1204310b/)
 
-## [NestJs + Real World + Enterprice + Production Architecture](./ARCHITECTURE.md)
+---
 
-Simple backend project built with:
+# Overview
+
+This project is a production-style backend architecture using:
 
 - NestJS
-- TypeORM
 - PostgreSQL
-- Docker
-- Swagger
-
-This project demonstrates:
-
-- Product CRUD
-- Categoury CRUD
-- Order CRUD
-- Entity relations (one to many, many to many)
-- Swagger documentation
-- PostgreSQL integration
-- Docker database setup
+- MongoDB
+- RabbitMQ
+- Kafka
+- MinIO
+- Event-Driven Architecture
+- Outbox Pattern
+- Internal Events
+- External Microservices
+- Transactional Event Publishing
 
 ---
 
-# Tech Stack
-
-| Technology | Purpose |
-|---|---|
-| NestJS | Backend framework |
-| TypeORM | ORM |
-| PostgreSQL | Database |
-| Docker | Run PostgreSQL |
-| Swagger | API documentation |
-
----
-
-# Project Structure
-
-```bash
-src/
-├── product/
-│   ├── dto/
-│   ├── entities/
-│   ├── product.controller.ts
-│   ├── product.service.ts
-│   └── product.module.ts
-│
-├── category/
-│   ├── dto/
-│   ├── entities/
-│   ├── category.controller.ts
-│   ├── category.service.ts
-│   └── category.module.ts
-│
-├── order/
-│   ├── dto/
-│   ├── entities/
-│   ├── order.controller.ts
-│   ├── order.service.ts
-│   └── order.module.ts
-│
-├── app.module.ts
-└── main.ts
-```
-
----
-
-
-# Installation
-
-## 1. Clone project
-
-```bash
-git clone https://github.com/alimori/SHOP-API.git
-cd shop-api
-```
-
----
-
-## 2. Install dependencies
-
-```bash
-pnpm install
-```
-
----
-
-# PostgreSQL Setup (Docker)
-
-## docker-compose.yml
-
-Create file:
-
-```yaml
-services:
-  postgres:
-    image: postgres:16
-
-    container_name: nest-postgres
-
-    restart: unless-stopped
-
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: shop
-
-    ports:
-      - "5432:5432"
-
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
-```
-
----
-
-## Run PostgreSQL
-
-```bash
-docker compose up -d
-```
-
----
-
-## Verify container
-
-```bash
-docker ps
-```
-
-Expected:
+# High Level Architecture
 
 ```text
-nest-postgres   Up   0.0.0.0:5432->5432/tcp
+                                    ┌──────────────────────┐
+                                    │      Swagger UI      │
+                                    │ localhost:3000/api   │
+                                    └──────────┬───────────┘
+                                               │
+                                               ▼
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                           SHOP SERVICE                             │
+│                         (NestJS Monolith)                          │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │ Product Module                                               │   │
+│  │ Order Module                                                 │   │
+│  │ Category Module                                              │   │
+│  │ Upload Module (MinIO)                                        │   │
+│  │ Outbox Module                                                │   │
+│  │ Internal Event System                                        │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │ Transaction Flow                                             │   │
+│  │                                                              │   │
+│  │ CREATE PRODUCT                                               │   │
+│  │   ├── Save Product in PostgreSQL                             │   │
+│  │   ├── Save Outbox Event                                      │   │
+│  │   └── Commit Transaction                                     │   │
+│  │                                                              │   │
+│  │ CREATE ORDER                                                 │   │
+│  │   ├── Save Order in PostgreSQL                               │   │
+│  │   ├── Save Outbox Event                                      │   │
+│  │   └── Commit Transaction                                     │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │ Outbox Processor                                             │   │
+│  │                                                              │   │
+│  │ Reads Unprocessed Events                                     │   │
+│  │                                                              │   │
+│  │ Product Events ─────────────► RabbitMQ                       │   │
+│  │ Order Events ───────────────► Kafka                          │   │
+│  │                                                              │   │
+│  │ Also emits Internal NestJS Events                            │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │ Internal Logging Consumer                                    │   │
+│  │                                                              │   │
+│  │ Consumes Product Events                                      │   │
+│  │ Stores Logs into MongoDB                                     │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
+
+
+                PRODUCT EVENTS                     ORDER EVENTS
+            (create/update/delete)            (create/update/delete)
+
+                        │                                 │
+                        ▼                                 ▼
+
+         ┌────────────────────────┐      ┌────────────────────────┐
+         │       RabbitMQ         │      │         Kafka          │
+         └──────────┬─────────────┘      └──────────┬─────────────┘
+                    │                                │
+                    ▼                                ▼
+
+┌────────────────────────────────┐   ┌────────────────────────────────┐
+│         EMAIL SERVICE          │   │      ORDER HISTORY SERVICE     │
+│                                │   │                                │
+│ Consumes Product Events        │   │ Consumes Order Events          │
+│                                │   │                                │
+│ Sends Email to Admin           │   │ Saves Order History            │
+│                                │   │ into MongoDB                   │
+└────────────────────────────────┘   └────────────────────────────────┘
+
+
+
+                     ┌───────────────────────┐
+                     │      PostgreSQL       │
+                     │                       │
+                     │ products              │
+                     │ orders                │
+                     │ categories            │
+                     │ outbox_events         │
+                     └───────────────────────┘
+
+
+                     ┌───────────────────────┐
+                     │        MongoDB        │
+                     │                       │
+                     │ logs                  │
+                     │ orderhistories        │
+                     └───────────────────────┘
+
+
+                     ┌───────────────────────┐
+                     │         MinIO         │
+                     │                       │
+                     │ File Storage          │
+                     │ Attachments           │
+                     └───────────────────────┘
 ```
 
 ---
 
-# Database Connection
+# Event Flow
 
-## app.module.ts
-
-```ts
-TypeOrmModule.forRoot({
-  type: 'postgres',
-  host: '127.0.0.1',
-  port: 5432,
-  username: 'postgres',
-  password: '1234',
-  database: 'shop',
-
-  autoLoadEntities: true,
-
-  synchronize: true,
-})
-```
-
----
-
-# Run Project
-
-```bash
-pnpm run start:dev
-```
-
----
-
-# Swagger Documentation
-
-Swagger URL:
+## Product Events
 
 ```text
-http://localhost:3000/api
+Product Created/Updated/Deleted
+        │
+        ▼
+PostgreSQL Transaction
+        │
+        ▼
+Outbox Event Saved
+        │
+        ▼
+Outbox Processor
+        │
+        ▼
+RabbitMQ
+        │
+        ├──► Email Service
+        └──► Future Services
 ```
 
 ---
 
-# Entities
-
-## Product Entity
-
-```ts
-@Entity()
-export class Product {
-
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
-  title: string;
-
-  @Column()
-  price: number;
-
-  @OneToMany(() => Order, (order) => order.product)
-  orders: Order[];
-
-  @ManyToMany(
-    () => Category,
-    (category) => category.products,
-    {
-      cascade: true,
-    },
-  )
-  @JoinTable()
-  categories: Category[];
-}
-```
-
----
-
-## Category Entity
-
-```ts
-@Entity()
-export class Category {
-
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
-  title: string;
-
-  @ManyToMany(
-    () => Product,
-    (product) => product.categories,
-  )
-  products: Product[];
-}
-```
-
----
-
-## Order Entity
-
-```ts
-@Entity()
-export class Order {
-
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
-  quantity: number;
-
-  @ManyToOne(() => Product, (product) => product.orders)
-  product: Product;
-}
-```
-
----
-
-# Database Relation
+## Order Events
 
 ```text
-Product ∞ ────────∞ Category
-Product 1 ────────∞ Order
-```
-
-One category can have many products, and each product can belong to many categories.
-One product can have many orders.
-
----
-
-# API Endpoints
-
-# Product APIs
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | /products | Create product |
-| GET | /products | Get all products |
-| GET | /products/:id | Get product by Id |
-| PUT | /products/:id | Update product |
-| DELETE | /products/:id | Delete product |
-
----
-
-# Category APIs
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | /categories | Create category |
-| GET | /categories | Get all categories |
-| GET | /categories/:id | Get category by Id |
-| PUT | /categories/:id | Update category |
-| DELETE | /categories/:id | Delete categoriy |
-| GET | /categories/:id/:products | Get category by Id with products |
-
----
-
-# Order APIs
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | /orders | Create order |
-| GET | /orders | Get all orders |
-| PUT | /orders/:id | Update order |
-| DELETE | /orders/:id | Delete order |
-| GET | /orders/product/:productId | Get orders by product Id |
-
----
-
-# Example Requests
-
-## Create Product
-
-POST `/products`
-
-```json
-{
-  "title": "Laptop",
-  "price": 1200,
-  "categoryIds": [1,2]
-}
+Order Created/Updated/Deleted
+        │
+        ▼
+PostgreSQL Transaction
+        │
+        ▼
+Outbox Event Saved
+        │
+        ▼
+Outbox Processor
+        │
+        ▼
+Kafka
+        │
+        ├──► Order History Service
+        └──► Future Analytics Services
 ```
 
 ---
 
-## Create Category
+# Database Design
 
-POST `/categories`
+## PostgreSQL
 
-```json
-{
-  "title": "Electronics"
-}
-```
+Main transactional database.
 
----
+### Tables
 
-## Create Order
-
-POST `/orders`
-
-```json
-{
-  "productId": 1,
-  "quantity": 2
-}
-```
+- products
+- orders
+- categories
+- outbox_events
 
 ---
 
-# Swagger DTO Example
+## MongoDB
 
-```ts
-export class CreateOrderDto {
+Used for logging/history.
 
-  @ApiProperty({
-    example: 1,
-    description: 'Product ID',
-  })
-  productId: number;
+### Collections
 
-  @ApiProperty({
-    example: 2,
-    description: 'Quantity',
-  })
-  quantity: number;
-}
-```
+- logs
+- orderhistories
 
 ---
 
-# Useful Docker Commands
+# Internal Events
 
-## Start database
+Used inside Shop Service.
 
-```bash
-docker compose up -d
-```
+Examples:
 
----
+- product.created
+- product.updated
+- product.deleted
+- order.created
+- order.updated
+- order.deleted
 
-## Stop database
+Consumers:
 
-```bash
-docker compose down
-```
-
----
-
-## View logs
-
-```bash
-docker logs nest-postgres
-```
+- LoggingConsumer
+- Future Audit Services
+- Future Metrics Services
 
 ---
 
-# Supported Features
+# Why Outbox Pattern?
 
-- OneToMany
-- ManyToMany
-- CRUD
-- Pagination
-- DTO Validation
-- Swagger
-- Exception handling
-- PostgreSQL
-- Docker
+The Outbox Pattern guarantees:
+
+- Database transaction consistency
+- No lost events
+- Reliable event publishing
+- Eventual consistency
+- Retry capability
+
+Without it:
+
+❌ DB commit may succeed but event publish fail
+
+With Outbox:
+
+✅ DB + Event saved atomically
 
 ---
 
-# Future Improvements
+# Why Kafka for Orders?
+
+Kafka is ideal for:
+
+- Event streaming
+- Event replay
+- Analytics
+- Multiple consumers
+- High throughput
+- Event history
+
+Order events are business-critical.
+
+---
+
+# Why RabbitMQ for Products?
+
+RabbitMQ is ideal for:
+
+- Task queues
+- Background jobs
+- Email sending
+- Notifications
+- Work distribution
+
+Product notifications fit RabbitMQ very well.
+
+---
+
+# Why MongoDB?
+
+MongoDB is ideal for:
+
+- Flexible schemas
+- Logging
+- Event history
+- Audit trails
+- Large append-only datasets
+
+---
+
+# Why MinIO?
+
+MinIO provides:
+
+- S3-compatible object storage
+- File uploads
+- Attachments
+- Media storage
+- Local development alternative to AWS S3
+
+---
+
+# Production Improvements
+
+Future improvements:
 
 - JWT Authentication
-- Roles & Guards
-- ConfigModule + .env
-- Migrations
-- Unit testing
-- WebSockets
-- Event-driven architecture
-- Microservices
+- Role-Based Access Control (RBAC)
+- API Gateway
+- CQRS
+- Redis Cache
+- Elasticsearch
+- Kubernetes
+- CI/CD
+- Distributed Tracing
+- OpenTelemetry
+- Prometheus + Grafana
+- Dead Letter Queues
+- Retry Policies
+- Idempotency
+- Saga Pattern
+- Event Versioning
 
 ---
 
-## Project setup
+# Clean Architecture Layers
 
-```bash
-$ pnpm install
-```
-
-## Compile and run the project
-
-```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
-```
-
----
-
-# Clean Architecture (VERY IMPORTANT)
-
-## Current flow
-
-```
+```text
 Controller
-   ↓
+    ↓
 Service
-   ↓
+    ↓
 Repository
+    ↓
+Database
 ```
 
-## Production Backend Architecture
+Cross-cutting concerns:
 
-Real systems are NOT like:
-
-```
-controller → service → repository → database
-```
-
-They are layered + bounded + event-driven:
-
-```
-API Layer (Controllers)
-   ↓
-Application Layer (Use Cases)
-   ↓
-Domain Layer (Business Rules)
-   ↓
-Infrastructure Layer (DB / External Services)
-```
-
-## Better folder structure
-
-```
-product/
-├── dto/
-├── entities/
-├── interfaces/
-├── services/
-├── repositories/
-├── product.controller.ts
-├── product.module.ts
-```
-
-## Production separation
-
-| Layer      | Responsibility |
-| ---------- | -------------- |
-| Controller | HTTP           |
-| Service    | Business logic |
-| Repository | Database       |
-| DTO        | Validation     |
-| Entity     | DB schema      |
+- Logging
+- Validation
+- Events
+- Messaging
+- Transactions
+- Exception Handling
 
 ---
 
-# Author
-[Ali Mortazavi](https://www.linkedin.com/in/ali-mortazavi-a1204310b/)
-Built for learning NestJS + PostgreSQL + TypeORM.
+# Technologies
+
+| Technology | Usage |
+|---|---|
+| NestJS | Backend Framework |
+| PostgreSQL | Main Database |
+| MongoDB | Logs & History |
+| RabbitMQ | Product Messaging |
+| Kafka | Order Streaming |
+| MinIO | File Storage |
+| Swagger | API Documentation |
+| TypeORM | ORM |
+| Mongoose | Mongo ODM |
+
+---
+
+# Current Features
+
+✅ Products CRUD  
+✅ Orders CRUD  
+✅ Categories CRUD  
+✅ Pagination  
+✅ Validation  
+✅ Swagger  
+✅ PostgreSQL  
+✅ MongoDB Logging  
+✅ RabbitMQ Events  
+✅ Kafka Events  
+✅ Transactional Outbox  
+✅ Internal Events  
+✅ Email Microservice  
+✅ Order History Microservice  
+✅ MinIO Uploads  
+✅ Dockerized Infrastructure  
+
+---
+
+[See NestJs Architectures + Comparison](./ARCHITECTURES-COMPARE.md)

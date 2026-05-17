@@ -4,6 +4,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { OutboxEvent } from './entities/outbox-event.entity';
 import { OutboxProcessor } from './outbox.processor';
 import { RabbitMQModule } from 'src/rabbitmq/rabbitmq.module';
+import { KafkaModule } from 'src/kafka/kafka.module';
 
 @Module({
     imports: [
@@ -13,7 +14,8 @@ import { RabbitMQModule } from 'src/rabbitmq/rabbitmq.module';
             OutboxEvent,
         ]),
 
-        RabbitMQModule 
+        RabbitMQModule,
+        KafkaModule 
     ],
 
     providers: [
