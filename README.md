@@ -33,8 +33,8 @@ This project is a production-style backend architecture using:
                                                ▼
 
 ┌─────────────────────────────────────────────────────────────────────┐
-│                           SHOP SERVICE                             │
-│                         (NestJS Monolith)                          │
+│                           SHOP SERVICE                              │
+│                         (NestJS Monolith)                           │
 │                                                                     │
 │  ┌──────────────────────────────────────────────────────────────┐   │
 │  │ Product Module                                               │   │
