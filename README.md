@@ -381,4 +381,8 @@ Cross-cutting concerns:
 
 ---
 
-[See NestJs Architectures + Comparison](./ARCHITECTURES-COMPARE.md)
+**Note:** See all services [here](./PORTS.md)
+
+---
+
+**Optional:** [Read NestJs Architectures + Comparison](./ARCHITECTURES-COMPARE.md)
