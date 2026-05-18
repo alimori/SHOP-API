@@ -102,6 +102,12 @@ http://localhost:6379/
 
 ---
 
+# Debezium
+
+http://localhost:8083/
+
+---
+
 # MinIO
 
 ## MinIO Console

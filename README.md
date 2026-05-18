@@ -15,6 +15,7 @@ This project is a production-style backend architecture using:
 - RabbitMQ
 - Kafka
 - MinIO
+- Debezium
 - Event-Driven Architecture
 - Outbox Pattern
 - Internal Events
@@ -36,19 +37,19 @@ This project is a production-style backend architecture using:
                │  Shop API    │
                └──────┬───────┘
                       │
-      ┌───────────────┼─────────────────┐
-      ▼               ▼                 ▼
+      ┌───────────────┼─────────────────────┐────────────────────┐
+      ▼               ▼                     ▼                    ▼
 
- PostgreSQL         Redis            Outbox Events
-      │               │                     │
-      │               │                     │
-      ▼               ▼                     ▼
+ PostgreSQL         Redis            Outbox Events            Debezium
+      │               │                     │                    │
+      │               │                     │                    │
+      ▼               ▼                     ▼                    ▼
 
- Product Data    Product Cache      Kafka / RabbitMQ
-
-                                          │
+ Product Data    Product Cache      Kafka / RabbitMQ           Kafka
+                                                      
+                                          │                      │
                   ┌───────────────────────┼──────────────────────┐
-                  ▼                       ▼                      ▼
+                  ▼                       ▼                      ▼    
 
             Email Service        SMS Service         Order History Service
              (RabbitMQ)            (Kafka)                 (Kafka)
@@ -86,7 +87,7 @@ This project is a production-style backend architecture using:
 │  │ Transaction Flow                                             │   │
 │  │                                                              │   │
 │  │ CREATE PRODUCT                                               │   │
-│  │   ├── Save Product in PostgreSQL and Cache in Redis                            │   │
+│  │   ├── Save Product in PostgreSQL and Cache in Redis          │   │
 │  │   ├── Save Outbox Event                                      │   │
 │  │   └── Commit Transaction                                     │   │
 │  │                                                              │   │
@@ -125,8 +126,8 @@ This project is a production-style backend architecture using:
          ┌────────────────────────┐      ┌────────────────────────┐
          │       RabbitMQ         │      │         Kafka          │
          └──────────┬─────────────┘      └──────────┬─────────────┘
-                    │                                │
-                    ▼                                ▼
+                    │                               │
+                    ▼                               ▼
 
 ┌────────────────────────────────┐   ┌────────────────────────────────┐
 │         EMAIL SERVICE          │   │      ORDER HISTORY SERVICE     │
@@ -150,10 +151,20 @@ This project is a production-style backend architecture using:
 
 
                      ┌───────────────────────┐
+                     │        Debezium       │
+                     │                       │
+                     │ CDC                   │
+                     │ Capture order table   │
+                     │ Push to Kafka         │
+                     └───────────────────────┘
+
+
+                     ┌───────────────────────┐
                      │        MongoDB        │
                      │                       │
                      │ logs                  │
                      │ orderhistories        │
+                     │ debeziumorderhistories│
                      └───────────────────────┘
 
 
@@ -164,6 +175,24 @@ This project is a production-style backend architecture using:
                      │ Attachments           │
                      └───────────────────────┘
 ```
+---
+
+## Architecture in Table
+
+| Layer          | Technology          |
+| -------------- | ------------------- |
+| OLTP DB        | PostgreSQL          |
+| App Events     | Outbox Pattern      |
+| Product Events | RabbitMQ            |
+| Order Events   | Kafka               |
+| CDC Events     | Debezium            |
+| Cache          | Redis               |
+| File Storage   | MinIO               |
+| Logs           | MongoDB             |
+| Audit          | MongoDB             |
+| SMS            | Python FastAPI      |
+| Email          | NestJS Microservice |
+
 
 ---
 
@@ -214,7 +243,6 @@ Kafka
 ```
 
 ---
-
 # Database Design
 
 ## PostgreSQL
@@ -238,6 +266,7 @@ Used for logging/history.
 
 - logs
 - orderhistories
+- debeziumorderhistories
 
 ---
 
@@ -394,7 +423,8 @@ Cross-cutting concerns:
 | Swagger | API Documentation |
 | TypeORM | ORM |
 | Mongoose | Mongo ODM |
-
+| Redis | Caching |
+| Debezium | CDC |
 ---
 
 # Current Features
@@ -409,6 +439,8 @@ Cross-cutting concerns:
 ✅ MongoDB Logging  
 ✅ RabbitMQ Events  
 ✅ Kafka Events  
+✅ Redis Caching  
+✅ Debezium CDC  
 ✅ Transactional Outbox  
 ✅ Internal Events  
 ✅ Email Microservice  
