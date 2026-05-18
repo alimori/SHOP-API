@@ -15,6 +15,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
 import { UploadModule } from './upload/upload.module';
 import { KafkaModule } from './kafka/kafka.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { KafkaModule } from './kafka/kafka.module';
       'mongodb://localhost:27017/shop-logs',
     ),
 
+    RedisModule,
     KafkaModule,
     RabbitMQModule,
     UploadModule,

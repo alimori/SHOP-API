@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 
@@ -6,6 +6,8 @@ import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { Category } from 'src/category/entities/category.entity';
 import { OutboxEvent } from 'src/outbox/entities/outbox-event.entity';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 @Injectable()
 export class ProductService {
@@ -16,6 +18,9 @@ export class ProductService {
 
         @InjectRepository(Category)
         private categoryRepo: Repository<Category>,
+
+        @Inject(CACHE_MANAGER)
+        private cacheManager: Cache,
 
         private dataSource: DataSource,
     ) { }
@@ -59,6 +64,7 @@ export class ProductService {
             );
 
             await queryRunner.commitTransaction();
+            await this.cacheManager.clear();
             return savedProduct;
 
         } catch (error) {
@@ -70,20 +76,54 @@ export class ProductService {
         }
     }
 
+    // async findAll(skip = 0, limit = 10) {
+
+    //     const [data, total] =
+    //         await this.productRepo.findAndCount({
+    //             skip,
+    //             take: limit,
+    //         });
+
+    //     return {
+    //         items: data,
+    //         total,
+    //         skip,
+    //         limit,
+    //     };
+    // }
+
+    // Using redis cache
     async findAll(skip = 0, limit = 10) {
 
-        const [data, total] =
-            await this.productRepo.findAndCount({
-                skip,
-                take: limit,
-            });
+        const cacheKey = `products:${skip}:${limit}`;
 
-        return {
+        // 1. Check cache
+        const cached = await this.cacheManager.get(cacheKey);
+
+        if (cached) {
+            console.log('FROM REDIS');
+            return cached;
+        }
+
+        console.log('FROM POSTGRES');
+
+        // 2. Query database
+        const [data, total] = await this.productRepo.findAndCount({
+            skip,
+            take: limit,
+        });
+
+        const response = {
             items: data,
             total,
             skip,
             limit,
         };
+
+        // 3. Save cache
+        await this.cacheManager.set(cacheKey, response, 60000);
+
+        return response;
     }
 
     async findOne(id: number) {
@@ -166,6 +206,7 @@ export class ProductService {
             );
 
             await queryRunner.commitTransaction();
+            await this.cacheManager.clear();
             return updatedProduct;
 
         } catch (error) {
@@ -216,7 +257,9 @@ export class ProductService {
                     ),
                 },
             );
+       
             await queryRunner.commitTransaction();
+            await this.cacheManager.clear();
             return { message: 'Product deleted successfully', };
 
         } catch (error) {

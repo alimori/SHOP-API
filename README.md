@@ -11,6 +11,7 @@ This project is a production-style backend architecture using:
 - NestJS
 - PostgreSQL
 - MongoDB
+- Redis
 - RabbitMQ
 - Kafka
 - MinIO
@@ -23,6 +24,42 @@ This project is a production-style backend architecture using:
 ---
 
 # High Level Architecture
+
+
+```
+                ┌──────────────┐
+                │   Frontend   │
+                └──────┬───────┘
+                       │
+                       ▼
+               ┌──────────────┐
+               │  Shop API    │
+               └──────┬───────┘
+                      │
+      ┌───────────────┼─────────────────┐
+      ▼               ▼                 ▼
+
+ PostgreSQL         Redis            Outbox Events
+      │               │                     │
+      │               │                     │
+      ▼               ▼                     ▼
+
+ Product Data    Product Cache      Kafka / RabbitMQ
+
+                                          │
+                  ┌───────────────────────┼──────────────────────┐
+                  ▼                       ▼                      ▼
+
+            Email Service        SMS Service         Order History Service
+             (RabbitMQ)            (Kafka)                 (Kafka)
+
+                  ▼                       ▼                      ▼
+
+               Gmail                 SMPP/Fake SMS           MongoDB
+
+```
+
+# Detailed Architecture
 
 ```text
                                     ┌──────────────────────┐
@@ -49,7 +86,7 @@ This project is a production-style backend architecture using:
 │  │ Transaction Flow                                             │   │
 │  │                                                              │   │
 │  │ CREATE PRODUCT                                               │   │
-│  │   ├── Save Product in PostgreSQL                             │   │
+│  │   ├── Save Product in PostgreSQL and Cache in Redis                            │   │
 │  │   ├── Save Outbox Event                                      │   │
 │  │   └── Commit Transaction                                     │   │
 │  │                                                              │   │

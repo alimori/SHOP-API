@@ -62,6 +62,8 @@ mongodb://localhost:27017
 
 http://localhost:8081
 
+Use MongoDB Compass
+
 ---
 
 # PostgreSQL
@@ -92,6 +94,11 @@ Password:
 ```text
 1234
 ```
+---
+
+# Redis
+
+http://localhost:6379/
 
 ---
 
